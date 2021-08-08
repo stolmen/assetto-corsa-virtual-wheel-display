@@ -1,7 +1,15 @@
+"""
+    Virtual Wheel plugin for Assetto corsa
+
+    Author: Edward Ong
+"""
+
+import abc
 import sys
+import math
+
 import ac
 import acsys
-import math
 
 
 app_window = None
@@ -22,6 +30,138 @@ def acMain(ac_version):
     ac.addRenderCallback(app_window, update)
 
     return app_name
+
+
+def update(delta_t):
+    ac.console('update called')
+
+    ac.setBackgroundOpacity(app_window, 0)
+    wheel_degrees = ac.getCarState(0, acsys.CS.Steer)
+    InGameWheelDrawer().draw(wheel_degrees)
+    draw_wheel(wheel_degrees)
+
+
+from typing import Iterable, Tuple
+
+
+TwoDimensionalCoordinates = Tuple[float, float]
+ShapeVectors = Iterable[TwoDimensionalCoordinates]  # rename this
+
+
+class Shape(abc.ABC):
+    @abc.abstractmethod
+    def generate_vectors(self) -> Iterable[ShapeVectors]:
+        pass
+
+
+class Annulus(Shape):
+    def __init__(self, inner_radius: float, outer_radius: float, origin: TwoDimensionalCoordinates):
+        centre_x = origin[0]
+        centre_y = origin[1]
+        radius = outer_radius
+        thiccness = outer_radius - inner_radius
+        self.vectors = []
+
+        num_vertices_in_circle = 50
+        for idx in range(num_vertices_in_circle):
+            v1_x = centre_x + radius * math.sin(idx * 2 * math.pi / num_vertices_in_circle)
+            v1_y = centre_y + radius * math.cos(idx * 2 * math.pi / num_vertices_in_circle)
+
+            v2_x = centre_x + radius * math.sin((idx + 1) * 2 * math.pi / num_vertices_in_circle)
+            v2_y = centre_y + radius * math.cos((idx + 1) * 2 * math.pi / num_vertices_in_circle)
+
+            v3_x = centre_x + (radius - thiccness) * math.sin((idx + 1) * 2 * math.pi / num_vertices_in_circle)
+            v3_y = centre_y + (radius - thiccness) * math.cos((idx + 1) * 2 * math.pi / num_vertices_in_circle)
+
+            v4_x = centre_x + (radius - thiccness) * math.sin(idx * 2 * math.pi / num_vertices_in_circle)
+            v4_y = centre_y + (radius - thiccness) * math.cos(idx * 2 * math.pi / num_vertices_in_circle)
+
+            v1 = v1_x, v1_y
+            v2 = v2_x, v2_y
+            v3 = v3_x, v3_y
+            v4 = v4_x, v4_y
+
+            self.vectors.append([v1, v2, v3, v4])
+
+    def generate_vectors(self) -> Iterable[ShapeVectors]:
+        return self.vectors
+
+
+class Line(Shape):
+    pass
+
+
+
+
+
+class Canvas:
+    """
+        Describe a finite size canvas which can be the target of zero or more of the following operations:
+            - `add`: draw some shape on the canvas
+            - `rotate`: rotate the entire canvas along with all previously added shapes about some point
+        Once the desired canvas has been composed, then call `generate_vectors` to create a list of instructions
+        on how to draw the resulting creation.
+    """
+
+    def __init__(self, size: Tuple[float, float]):
+        self.canvas_size_x = size[0]
+        self.canvas_size_y = size[1]
+
+        # This defines a list of polygons,
+        # where each polygon is defined by ordered collections of three of more coordinates,
+        # where each coordinate defines a polygon vertex.
+        self.vectors = []
+
+    def add(self, shape: Shape, origin: TwoDimensionalCoordinates) -> None:
+        v = shape.generate_vectors()
+        v = self._translate(v, origin)
+        self.vectors += v
+
+    def rotate(self, rotation_degrees: float, rotate_about: TwoDimensionalCoordinates) -> None:
+        """
+            Rotate all previously defined shapes drawn on the canvas by the given rotation amount in degrees.
+            - A rotation of zero degrees is equivalent to doing nothing.
+            - Positive rotation is arbitrarily chosen to be clockwise rotation.
+        """
+        new_vectors = []
+        for v in self.vectors:
+            new_vectors.append([self._rotate_point(p, rotation_degrees, rotate_about) for p in v])
+        self.vectors = new_vectors
+
+    def generate_vectors(self) -> Iterable[ShapeVectors]:
+        return self.vectors
+
+    @staticmethod
+    def _translate(vectors: Iterable[ShapeVectors], origin: TwoDimensionalCoordinates) -> Iterable[ShapeVectors]:
+        raise NotImplementedError
+
+    @staticmethod
+    def _rotate_point(p: TwoDimensionalCoordinates, rotation_degrees: float, rotate_about: TwoDimensionalCoordinates) -> TwoDimensionalCoordinates:
+        raise NotImplementedError
+
+
+import abc
+class WheelDrawer:
+    @abc.abstractmethod
+    def paint(self, vectors: Iterable[ShapeVectors]) -> None:
+        raise NotImplementedError
+
+    def draw(self, wheel_rotation_degrees: float) -> None:
+        # Compose the thing
+        c = Canvas(size=(10, 10))
+        c.add(Annulus(inner_radius=3, outer_radius=4, origin=(5, 5)))
+        c.add(Line((0, 5), (10, 5), 1))
+        c.add(Line((5, 5), (5, 0), 1))
+        c.rotate(wheel_rotation_degrees)
+        vectors = c.generate_vectors()
+        self.artist.paint(vectors)
+
+
+class InCameWheelDrawer(WheelDrawer):
+
+
+
+class TestWheelDrawer(WheelDrawer):
 
 
 def draw_wheel(degrees):
@@ -122,10 +262,3 @@ def draw_thicc_line(v1, v2, thicc):
 
     draw_quad(v1, v2, v3, v4)
 
-
-def update(delta_t):
-    ac.console('update called')
-
-    ac.setBackgroundOpacity(app_window, 0)
-    wheel_degrees = ac.getCarState(0, acsys.CS.Steer)
-    draw_wheel(wheel_degrees)
