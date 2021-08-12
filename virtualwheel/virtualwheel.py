@@ -5,15 +5,15 @@
 """
 
 import abc
-import sys
 import math
-
+from typing import Iterable, Tuple
 
 try:
     import ac
     import acsys
 except ImportError:
     print("Failed to import ac stuff. Is this being run outside of the AC context?")
+
 
 import pygame
 
@@ -43,10 +43,6 @@ def update(delta_t):
     ac.setBackgroundOpacity(app_window, 0)
     wheel_degrees = ac.getCarState(0, acsys.CS.Steer)
     InGameWheelDrawer().display(wheel_degrees)
-    draw_wheel(wheel_degrees)
-
-
-from typing import Iterable, Tuple
 
 
 class Point:
@@ -56,7 +52,6 @@ class Point:
         self.x = x
         self.y = y
 
-    # TODO(EDWARD): this is probably fucked - write some tests for this
     def rotate(self, rotation_degrees: float, rotate_about: "Point") -> "Point":
         # translate to origin
         translated_point = self.translate(-1 * rotate_about.x, -1 * rotate_about.y)
@@ -68,6 +63,7 @@ class Point:
         new_x = r * math.cos(new_theta)
         new_y = r * math.sin(new_theta)
 
+        # translate back to rotate_about Point
         return Point(new_x, new_y).translate(rotate_about.x, rotate_about.y)
 
     def translate(self, x: float, y: float) -> "Point":
@@ -85,51 +81,41 @@ class Shape(abc.ABC):
 
 class Annulus(Shape):
     def __init__(self, inner_radius: float, outer_radius: float, origin: Point):
-        centre_x = origin.x
-        centre_y = origin.y
-        radius = outer_radius
-        thiccness = outer_radius - inner_radius
+        num_components = 50
         self.vectors = []
+        inner_points = self._points_on_a_circle(
+            origin=origin, radius=inner_radius, n=num_components
+        )
+        outer_points = self._points_on_a_circle(
+            origin=origin, radius=outer_radius, n=num_components
+        )
 
-        num_vertices_in_circle = 50
-        for idx in range(num_vertices_in_circle):
-            v1_x = centre_x + radius * math.sin(
-                idx * 2 * math.pi / num_vertices_in_circle
-            )
-            v1_y = centre_y + radius * math.cos(
-                idx * 2 * math.pi / num_vertices_in_circle
-            )
+        def pair(x):
+            x = list(x)  # this is bad. can I somehow not fully evaluate the iterable?
+            for i in range(len(x)):
+                yield x[i], x[(i + 1) % len(x)]
 
-            v2_x = centre_x + radius * math.sin(
-                (idx + 1) * 2 * math.pi / num_vertices_in_circle
+        for (inner_1, inner_2), (outer_1, outer_2) in zip(pair(inner_points), pair(outer_points)):
+            self.vectors.append(
+                [
+                    inner_1,
+                    outer_1,
+                    outer_2,
+                    inner_2,
+                ]
             )
-            v2_y = centre_y + radius * math.cos(
-                (idx + 1) * 2 * math.pi / num_vertices_in_circle
-            )
-
-            v3_x = centre_x + (radius - thiccness) * math.sin(
-                (idx + 1) * 2 * math.pi / num_vertices_in_circle
-            )
-            v3_y = centre_y + (radius - thiccness) * math.cos(
-                (idx + 1) * 2 * math.pi / num_vertices_in_circle
-            )
-
-            v4_x = centre_x + (radius - thiccness) * math.sin(
-                idx * 2 * math.pi / num_vertices_in_circle
-            )
-            v4_y = centre_y + (radius - thiccness) * math.cos(
-                idx * 2 * math.pi / num_vertices_in_circle
-            )
-
-            v1 = Point(v1_x, v1_y)
-            v2 = Point(v2_x, v2_y)
-            v3 = Point(v3_x, v3_y)
-            v4 = Point(v4_x, v4_y)
-
-            self.vectors.append([v1, v2, v3, v4])
 
     def generate_vectors(self) -> Iterable[ShapePoints]:
         return self.vectors
+
+    @staticmethod
+    def _points_on_a_circle(origin: Point, radius: float, n: int) -> Iterable[Point]:
+        return [
+            Point(0, radius)
+            .rotate(rotation_degrees=i * 360 / n, rotate_about=Point(0, 0))
+            .translate(origin.x, origin.y)
+            for i in range(n)
+        ]
 
 
 class Line(Shape):
@@ -138,26 +124,14 @@ class Line(Shape):
         delta_x = math.sin(line_angle_rad) * thickness / 2.0
         delta_y = math.cos(line_angle_rad) * thickness / 2.0
 
-        x1_orig, y1_orig = start.x, start.y
-        x2_orig, y2_orig = end.x, end.y
-
-        x1 = x1_orig - delta_x
-        y1 = y1_orig + delta_y
-        v1 = Point(x1, y1)
-
-        x2 = x2_orig - delta_x
-        y2 = y2_orig + delta_y
-        v2 = Point(x2, y2)
-
-        x3 = x2_orig + delta_x
-        y3 = y2_orig - delta_y
-        v3 = Point(x3, y3)
-
-        x4 = x1_orig + delta_x
-        y4 = y1_orig - delta_y
-        v4 = Point(x4, y4)
-
-        self.vectors = [[v1, v2, v3, v4]]
+        self.vectors = [
+            [
+                Point(start.x - delta_x, start.y + delta_y),
+                Point(end.x - delta_x, end.y + delta_y),
+                Point(end.x + delta_x, end.y - delta_y),
+                Point(start.x + delta_x, start.y - delta_y),
+            ]
+        ]
 
     def generate_vectors(self) -> Iterable[ShapePoints]:
         return self.vectors
@@ -225,23 +199,50 @@ class WheelDrawer:
         # less than the outer diameter of the wheel.
         offset = 0.5
 
-        c = Canvas(size=(10, 10))
-        c.add(Annulus(inner_radius=4, outer_radius=5, origin=Point(5, 5)))
-        c.add(Line(Point(offset, 5), Point(10 - offset, 5), thickness=1))
-        c.add(Line(Point(5, 5), Point(5, 10 - offset), thickness=1))
-        c.rotate(rotation_degrees=wheel_rotation_degrees, rotate_about=Point(5, 5))
+        width = 10
+        height = 10
+        wheel_rim_thickness = 1
+
+        c = Canvas(size=(width, height))
+        c.add(
+            Annulus(
+                inner_radius=(width / 2) - wheel_rim_thickness,
+                outer_radius=width / 2,
+                origin=Point(width / 2, height / 2),
+            )
+        )
+        c.add(
+            Line(
+                Point(offset, height / 2),
+                Point(width - offset, height / 2),
+                thickness=wheel_rim_thickness,
+            )
+        )
+        c.add(
+            Line(
+                Point(width / 2, height / 2),
+                Point(width / 2, height - offset),
+                thickness=wheel_rim_thickness,
+            )
+        )
+        c.rotate(
+            rotation_degrees=wheel_rotation_degrees,
+            rotate_about=Point(width / 2, height / 2),
+        )
         c.scale(self.scale)
         vectors = c.generate_vectors()
         self.paint(vectors)
 
 
-class InCameWheelDrawer(WheelDrawer):
+class InGameWheelDrawer(WheelDrawer):
+    scale = 1
+
     def paint(self, shape_points_collection: Iterable[ShapePoints]) -> None:
-        ac.console(
-            "draw_quad called with params v1={}, v2={}, v3={}, v4={}".format(
-                v1, v2, v3, v4
-            )
-        )
+        # ac.console(
+        #     "draw_quad called with params v1={}, v2={}, v3={}, v4={}".format(
+        #         v1, v2, v3, v4
+        #     )
+        # )
         for shape_points in shape_points_collection:
             assert (
                 len(list(shape_points)) == 4
@@ -278,7 +279,7 @@ def main():
     drawer = TestWheelDrawer()
     for i in range(-181, 181):
         drawer.display(i)
-        time.sleep(0.05)
+        time.sleep(0.015)
 
 
 if __name__ == "__main__":
