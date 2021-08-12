@@ -8,17 +8,22 @@ import abc
 import sys
 import math
 
-import ac
-import acsys
 
+try:
+    import ac
+    import acsys
+except ImportError:
+    print("Failed to import ac stuff. Is this being run outside of the AC context?")
+
+import pygame
 
 app_window = None
 
 
 def acMain(ac_version):
     app_name = "Virtual Wheel"
-    ac.console('lol.')
-    ac.console('ac version: {}'.format(ac_version))
+    ac.console("lol.")
+    ac.console("ac version: {}".format(ac_version))
 
     global app_window
     app_window = ac.newApp(app_name)
@@ -33,7 +38,7 @@ def acMain(ac_version):
 
 
 def update(delta_t):
-    ac.console('update called')
+    ac.console("update called")
 
     ac.setBackgroundOpacity(app_window, 0)
     wheel_degrees = ac.getCarState(0, acsys.CS.Steer)
@@ -44,15 +49,15 @@ def update(delta_t):
 from typing import Iterable, Tuple
 
 
-
 class Point:
-    """ Defines a point in a 2D cartesian space. """
+    """Defines a point in a 2D cartesian space."""
+
     def __init__(self, x: float, y: float):
         self.x = x
         self.y = y
 
     # TODO(EDWARD): this is probably fucked - write some tests for this
-    def rotate(self, rotation_degrees: float, rotate_about: 'Point') -> 'Point':
+    def rotate(self, rotation_degrees: float, rotate_about: "Point") -> "Point":
         # translate to origin
         translated_point = self.translate(-1 * rotate_about.x, -1 * rotate_about.y)
 
@@ -65,7 +70,7 @@ class Point:
 
         return Point(new_x, new_y).translate(rotate_about.x, rotate_about.y)
 
-    def translate(self, x: float, y: float) -> 'Point':
+    def translate(self, x: float, y: float) -> "Point":
         return Point(x + self.x, y + self.y)
 
 
@@ -88,17 +93,33 @@ class Annulus(Shape):
 
         num_vertices_in_circle = 50
         for idx in range(num_vertices_in_circle):
-            v1_x = centre_x + radius * math.sin(idx * 2 * math.pi / num_vertices_in_circle)
-            v1_y = centre_y + radius * math.cos(idx * 2 * math.pi / num_vertices_in_circle)
+            v1_x = centre_x + radius * math.sin(
+                idx * 2 * math.pi / num_vertices_in_circle
+            )
+            v1_y = centre_y + radius * math.cos(
+                idx * 2 * math.pi / num_vertices_in_circle
+            )
 
-            v2_x = centre_x + radius * math.sin((idx + 1) * 2 * math.pi / num_vertices_in_circle)
-            v2_y = centre_y + radius * math.cos((idx + 1) * 2 * math.pi / num_vertices_in_circle)
+            v2_x = centre_x + radius * math.sin(
+                (idx + 1) * 2 * math.pi / num_vertices_in_circle
+            )
+            v2_y = centre_y + radius * math.cos(
+                (idx + 1) * 2 * math.pi / num_vertices_in_circle
+            )
 
-            v3_x = centre_x + (radius - thiccness) * math.sin((idx + 1) * 2 * math.pi / num_vertices_in_circle)
-            v3_y = centre_y + (radius - thiccness) * math.cos((idx + 1) * 2 * math.pi / num_vertices_in_circle)
+            v3_x = centre_x + (radius - thiccness) * math.sin(
+                (idx + 1) * 2 * math.pi / num_vertices_in_circle
+            )
+            v3_y = centre_y + (radius - thiccness) * math.cos(
+                (idx + 1) * 2 * math.pi / num_vertices_in_circle
+            )
 
-            v4_x = centre_x + (radius - thiccness) * math.sin(idx * 2 * math.pi / num_vertices_in_circle)
-            v4_y = centre_y + (radius - thiccness) * math.cos(idx * 2 * math.pi / num_vertices_in_circle)
+            v4_x = centre_x + (radius - thiccness) * math.sin(
+                idx * 2 * math.pi / num_vertices_in_circle
+            )
+            v4_y = centre_y + (radius - thiccness) * math.cos(
+                idx * 2 * math.pi / num_vertices_in_circle
+            )
 
             v1 = Point(v1_x, v1_y)
             v2 = Point(v2_x, v2_y)
@@ -114,8 +135,8 @@ class Annulus(Shape):
 class Line(Shape):
     def __init__(self, start: Point, end: Point, thickness: float):
         line_angle_rad = math.atan2(end.y - start.y, end.x - start.x)
-        delta_x = math.sin(line_angle_rad) * thickness / 2.
-        delta_y = math.cos(line_angle_rad) * thickness / 2.
+        delta_x = math.sin(line_angle_rad) * thickness / 2.0
+        delta_y = math.cos(line_angle_rad) * thickness / 2.0
 
         x1_orig, y1_orig = start.x, start.y
         x2_orig, y2_orig = end.x, end.y
@@ -144,11 +165,11 @@ class Line(Shape):
 
 class Canvas:
     """
-        Describe a finite size canvas which can be the target of zero or more of the following operations:
-            - `add`: draw some shape on the canvas
-            - `rotate`: rotate the entire canvas along with all previously added shapes about some point
-        Once the desired canvas has been composed, then call `generate_vectors` to create a list of instructions
-        on how to draw the resulting creation.
+    Describe a finite size canvas which can be the target of zero or more of the following operations:
+        - `add`: draw some shape on the canvas
+        - `rotate`: rotate the entire canvas along with all previously added shapes about some point
+    Once the desired canvas has been composed, then call `generate_vectors` to create a list of instructions
+    on how to draw the resulting creation.
     """
 
     def __init__(self, size: Tuple[float, float]):
@@ -158,7 +179,7 @@ class Canvas:
         # This defines a list of polygons,
         # where each polygon is defined by ordered collections of three of more coordinates,
         # where each coordinate defines a polygon vertex.
-        self.vectors = []
+        self.vectors: Iterable[ShapePoints] = []
 
     def add(self, shape: Shape) -> None:
         v = shape.generate_vectors()
@@ -166,9 +187,9 @@ class Canvas:
 
     def rotate(self, rotation_degrees: float, rotate_about: Point) -> None:
         """
-            Rotate all previously defined shapes drawn on the canvas by the given rotation amount in degrees.
-            - A rotation of zero degrees is equivalent to doing nothing.
-            - Positive rotation is arbitrarily chosen to be clockwise rotation.
+        Rotate all previously defined shapes drawn on the canvas by the given rotation amount in degrees.
+        - A rotation of zero degrees is equivalent to doing nothing.
+        - Positive rotation is arbitrarily chosen to be clockwise rotation.
         """
         new_vectors = []
         for v in self.generate_vectors():
@@ -178,28 +199,53 @@ class Canvas:
     def generate_vectors(self) -> Iterable[ShapePoints]:
         return self.vectors
 
+    def scale(self, x: float) -> None:
+        """Scale the canvas by the given amount."""
+        new_vectors = []
+        for v in self.vectors:
+            new_vectors.append([Point(p.x * x, p.y * x) for p in v])
+        self.vectors = new_vectors
+
 
 import abc
+
+
 class WheelDrawer:
     @abc.abstractmethod
     def paint(self, vectors: Iterable[ShapePoints]) -> None:
         raise NotImplementedError
 
+    @property
+    @abc.abstractmethod
+    def scale(self) -> float:
+        return 1
+
     def display(self, wheel_rotation_degrees: float) -> None:
+        # Hide ends of rectangular spokes behind the wheel by shortening the rectangular sections to
+        # less than the outer diameter of the wheel.
+        offset = 0.5
+
         c = Canvas(size=(10, 10))
-        c.add(Annulus(inner_radius=3, outer_radius=4, origin=Point(5, 5)))
-        c.add(Line(Point(0, 5), Point(10, 5), thickness=1))
-        c.add(Line(Point(5, 5), Point(5, 0), thickness=1))
-        c.rotate(rotation_degrees=wheel_rotation_degrees, rotate_about=Point(0, 0))
+        c.add(Annulus(inner_radius=4, outer_radius=5, origin=Point(5, 5)))
+        c.add(Line(Point(offset, 5), Point(10 - offset, 5), thickness=1))
+        c.add(Line(Point(5, 5), Point(5, 10 - offset), thickness=1))
+        c.rotate(rotation_degrees=wheel_rotation_degrees, rotate_about=Point(5, 5))
+        c.scale(self.scale)
         vectors = c.generate_vectors()
         self.paint(vectors)
 
 
 class InCameWheelDrawer(WheelDrawer):
     def paint(self, shape_points_collection: Iterable[ShapePoints]) -> None:
-        ac.console('draw_quad called with params v1={}, v2={}, v3={}, v4={}'.format(v1, v2, v3, v4))
+        ac.console(
+            "draw_quad called with params v1={}, v2={}, v3={}, v4={}".format(
+                v1, v2, v3, v4
+            )
+        )
         for shape_points in shape_points_collection:
-            assert len(list(shape_points)) == 4, "Sorry, non quadilateral shapes currently not supported"
+            assert (
+                len(list(shape_points)) == 4
+            ), "Sorry, non quadilateral shapes currently not supported"
             ac.glBegin(3)
             ac.glColor4f(1, 1, 1, 1)
             for point in shape_points:
@@ -208,13 +254,32 @@ class InCameWheelDrawer(WheelDrawer):
 
 
 class TestWheelDrawer(WheelDrawer):
+    scale = 600 / 10
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        pygame.init()
+        self.screen = pygame.display.set_mode(size=(600, 600))
+
     def paint(self, vectors: Iterable[ShapePoints]) -> None:
-        print(f'TEST vectors {vectors}')
+        self.screen.fill((0, 0, 0, 0))
+        for shape_points in vectors:
+            print(f"drawing {[(i.x, i.y) for i in shape_points]}")
+            # pygame.display.flip()
+            pygame.draw.polygon(
+                self.screen, (255, 255, 255), [(i.x, i.y) for i in shape_points]
+            )
+        pygame.display.flip()
 
 
 def main():
-    TestWheelDrawer().display(wheel_rotation_degrees=90)
+    import time
+
+    drawer = TestWheelDrawer()
+    for i in range(-181, 181):
+        drawer.display(i)
+        time.sleep(0.05)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
