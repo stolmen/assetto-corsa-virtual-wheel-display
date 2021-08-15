@@ -1,5 +1,18 @@
+import sys
+import os
+sys.path.append(os.path.dirname(__file__))
+
 import abc
-import typing
+
+try:
+    import typing
+    ShapePoints = typing.Sequence[
+        Point
+    ]  # The definition of a shape through a collection of vertices
+    ShapeCollection = typing.Sequence[ShapePoints]  # Collection of shapes
+except ImportError:
+    ShapePoints='asdf'
+    ShapeCollection='asdf'
 import math
 
 
@@ -28,13 +41,9 @@ class Point:
         return Point(x + self.x, y + self.y)
 
 
-ShapePoints = typing.Sequence[
-    Point
-]  # The definition of a shape through a collection of vertices
-ShapeCollection = typing.Sequence[ShapePoints]  # Collection of shapes
 
 
-class Shape(abc.ABC):
+class Shape(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def generate_vectors(self) -> ShapeCollection:
         pass
@@ -69,6 +78,10 @@ class Annulus(Shape):
             )
 
     def generate_vectors(self) -> ShapeCollection:
+        import ac
+        for thing in self.vectors:
+            for point in thing:
+                ac.console('{},{}'.format(point.x, point.y))
         return self.vectors
 
     @staticmethod

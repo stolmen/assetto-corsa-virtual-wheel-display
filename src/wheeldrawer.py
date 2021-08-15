@@ -1,10 +1,13 @@
+import sys
+import os
+sys.path.append(os.path.dirname(__file__))
+
 import abc
-from shapes import ShapeCollection
+from shapes import ShapeCollection, Annulus, Point, Line
 from canvas import Canvas
-from shapes import Annulus, Point, Line
 
 
-class WheelDrawer:
+class WheelDrawer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def paint(self, vectors: ShapeCollection) -> None:
         raise NotImplementedError

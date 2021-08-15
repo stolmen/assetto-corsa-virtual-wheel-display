@@ -1,7 +1,16 @@
+import sys
+import os
+sys.path.append(os.path.dirname(__file__))
+
 from shapes import ShapeCollection, Shape, Point
-from typing import Tuple
 
+try:
+    from typing import Tuple
+    CanvasSizeType = Tuple[float, float]
+except ImportError:
+    CanvasSizeType = 'canvassizetype'
 
+    
 class Canvas:
     """
     Describe a finite size canvas which can be the target of zero or more of the following operations:
@@ -11,14 +20,14 @@ class Canvas:
     on how to draw the resulting creation.
     """
 
-    def __init__(self, size: Tuple[float, float]):
+    def __init__(self, size: CanvasSizeType):
         self.canvas_size_x = size[0]
         self.canvas_size_y = size[1]
 
         # This defines a list of polygons,
         # where each polygon is defined by ordered collections of three of more coordinates,
         # where each coordinate defines a polygon vertex.
-        self.vectors: ShapeCollection = []
+        self.vectors = []
 
     def add(self, shape: Shape) -> None:
         self.vectors += shape.generate_vectors()
