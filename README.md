@@ -28,4 +28,12 @@ Always keen on PRs to improve this plugin with new features or bug fixes no matt
 
 ## Development environment setup
 1. Install `Pipenv` https://pipenv.pypa.io/en/latest/
-2. 
+2. ... TODO: finish these instructions
+
+## Testing your changes
+TODO: set up automated regression tests
+```angular2html
+cd src
+python test.py
+```
+A pygame window will open and display a wheel rotating. If it is not a wheel rotating, then something's not right!

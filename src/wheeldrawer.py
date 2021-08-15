@@ -19,6 +19,7 @@ class WheelDrawer:
         # less than the outer diameter of the wheel.
         offset = 0.5
 
+        # TODO: maybe make these parameters user configurable
         width = 10
         height = 10
         wheel_rim_thickness = 1
