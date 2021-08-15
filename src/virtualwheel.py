@@ -15,6 +15,9 @@ class AcHandler(logging.Handler):
         ac.console(record)
 
 
+PLUGIN_VERSION = "v0.1"
+
+
 ac_handler = AcHandler()
 ac_handler.setLevel(logging.DEBUG)
 stream_handler = logging.StreamHandler()
@@ -54,6 +57,7 @@ try:
         app_name = "Virtual Wheel"
         logger.info("AC version: {}".format(ac_version))
         logger.info("Python version: {}".format(sys.version_info))
+        logger.info("virtualwheel version: {}".format(PLUGIN_VERSION))
 
         global app_window
         app_window = ac.newApp(app_name)
