@@ -30,10 +30,15 @@ Always keen on PRs to improve this plugin with new features or bug fixes no matt
 1. Install `Pipenv` https://pipenv.pypa.io/en/latest/
 2. ... TODO: finish these instructions
 
-## Testing your changes
+## Testing your changes (WIP)
 TODO: set up automated regression tests
-```angular2html
+```
 cd src
 python test.py
 ```
 A pygame window will open and display a wheel rotating. If it is not a wheel rotating, then something's not right!
+
+Testing on target Python version in Docker: 
+```
+sudo docker build -t lol . && sudo docker run -it lol python test.py
+```

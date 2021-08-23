@@ -7,7 +7,7 @@ import abc
 try:
     import typing
     ShapePoints = typing.Sequence[
-        Point
+        'Point'
     ]  # The definition of a shape through a collection of vertices
     ShapeCollection = typing.Sequence[ShapePoints]  # Collection of shapes
 except ImportError:
@@ -40,7 +40,8 @@ class Point:
     def translate(self, x: float, y: float) -> "Point":
         return Point(x + self.x, y + self.y)
 
-
+    def __repr__(self):
+        return '<Point ({}, {}))>'.format(self.x, self.y)
 
 
 class Shape(metaclass=abc.ABCMeta):
@@ -78,10 +79,13 @@ class Annulus(Shape):
             )
 
     def generate_vectors(self) -> ShapeCollection:
-        import ac
-        for thing in self.vectors:
-            for point in thing:
-                ac.console('{},{}'.format(point.x, point.y))
+        # try:
+        #     import ac
+        # except ImportError:
+        #     pass
+        # for thing in self.vectors:
+        #     for point in thing:
+        #         ac.console('{},{}'.format(point.x, point.y))
         return self.vectors
 
     @staticmethod
