@@ -9,8 +9,8 @@ This is a Python widget for Assetto Corsa that renders a basic wheel that illust
 Installation steps are no different to installing any other Python widget.
 
 1. Extract the contents of `virtualwheel.zip` to `GAME_DIRECTORY`
-2. Check that a directory named `GAME_DIRECTORY/apps/virtualwheel` exists
-3. Enable this plugin in game settings
+2. Check that a directory named `GAME_DIRECTORY/apps/python/virtualwheel` exists
+3. Enable this plugin in game settings. From game main menu: `Options` > `General` > `UI Modules`. Check `virtualwheel`.
 4. Enter a session
 5. Select `Virtual Wheel` from the widget list
 
