@@ -4,41 +4,34 @@
 <screenshot here>
 
 This is a Python widget for Assetto Corsa that renders a basic wheel that illustrates the current sheering angle input.
+Thanks to ckendell for the AC app tutorial that I found super helpful. https://github.com/ckendell/ACAppTutorial/blob/master/ACAppTutorial.md
 
 ## Installation
-Installation steps are no different to installing any other Python widget.
-
-1. Extract the contents of `virtualwheel.zip` to `GAME_DIRECTORY`
-2. Check that a directory named `GAME_DIRECTORY/apps/python/virtualwheel` exists
+1. Extract the contents of `src` to `GAME_DIRECTORY/apps/python/virtualwheel`. This is typically `C:\Program Files (x86)\Steam\steamapps\common\assettocorsa\apps\python\virtualwheel`.
 3. Enable this plugin in game settings. From game main menu: `Options` > `General` > `UI Modules`. Check `virtualwheel`.
 4. Enter a session
-5. Select `Virtual Wheel` from the widget list
+5. Select `Virtual Wheel` from the widget list and drag the widget to your desired position.
 
 ## Release notes
 v0.1: initial release
 
 ## Contributing
 Always keen on PRs to improve this plugin with new features or bug fixes no matter how small.
-1. Clone repo to disk
-2. Set up `Pipenv` (see below) 
-3. Make changes to source files in `src.py`
-4. Make sure tests and linters pass (see below)
-5. Create PR! 
-6. PR gets reviewed and merged maybe. Thanks!
 
-## Development environment setup
-1. Install `Pipenv` https://pipenv.pypa.io/en/latest/
-2. ... TODO: finish these instructions
+1. Clone repo to disk
+2. Make changes to source files in `src`
+3. Make sure tests pass
+4. Do an in-game test
+5. Create PR
+6. PR gets reviewed and probably merged by me. Thanks!
 
 ## Testing your changes (WIP)
-TODO: set up automated regression tests
+TODO(EDWARD): set up regression testing and linter and add test status widgets.
+
+Quick sanity check: run `test.py`. A pygame window will appear and display a wheel rotating. If it is not a wheel rotating, then something's not right!
 ```
 cd src
+pip install pygame
 python test.py
 ```
-A pygame window will open and display a wheel rotating. If it is not a wheel rotating, then something's not right!
 
-Testing on target Python version in Docker: 
-```
-sudo docker build -t lol . && sudo docker run -it lol python test.py
-```
