@@ -15,7 +15,16 @@ class WheelDrawer(metaclass=abc.ABCMeta):
     @property
     @abc.abstractmethod
     def scale(self) -> float:
+        """ Scale wheel up by the provided factor. 
+        For example, if 2 is provided, the drawn wheel will double in size. """
         return 1
+
+    @property
+    def translate(self) -> tuple:
+        """ Translate the wheel provided a tuple of (x, y) co-ordinates.
+        This translation is performed after scaling. 
+        """
+        return 0, 0
 
     def display(self, wheel_rotation_degrees: float) -> None:
         # Hide ends of rectangular spokes behind the wheel by shortening the rectangular sections to
@@ -58,6 +67,7 @@ class WheelDrawer(metaclass=abc.ABCMeta):
             rotate_about=Point(width / 2, height / 2),
         )
         c.scale(self.scale)
+        c.translate(x=self.translate[0], y=self.translate[1])
         vectors = c.generate_vectors()
 
         self.paint(vectors)

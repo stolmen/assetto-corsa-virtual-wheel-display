@@ -46,7 +46,7 @@ def main():
     import time
 
     drawer = TestWheelDrawer()
-    for i in range(-361, 361):
+    for i in range(-181, 181):
         drawer.display(i)
         time.sleep(0.015)
 

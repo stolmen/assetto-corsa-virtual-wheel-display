@@ -1,5 +1,6 @@
 import sys
 import os
+import math
 sys.path.append(os.path.dirname(__file__))
 
 import abc
@@ -13,7 +14,6 @@ try:
 except ImportError:
     ShapePoints='asdf'
     ShapeCollection='asdf'
-import math
 
 
 class Point:
@@ -52,7 +52,7 @@ class Shape(metaclass=abc.ABCMeta):
 
 class Annulus(Shape):
     def __init__(self, inner_radius: float, outer_radius: float, origin: Point):
-        num_components = 20
+        num_components = 50
         self.vectors = []
         inner_points = self._points_on_a_circle(
             origin=origin, radius=inner_radius, n=num_components
@@ -80,13 +80,6 @@ class Annulus(Shape):
         self.vectors = self.vectors
 
     def generate_vectors(self) -> ShapeCollection:
-        # try:
-        #     import ac
-        # except ImportError:
-        #     pass
-        # for thing in self.vectors:
-        #     for point in thing:
-        #         ac.console('{},{}'.format(point.x, point.y))
         return self.vectors
 
     @staticmethod

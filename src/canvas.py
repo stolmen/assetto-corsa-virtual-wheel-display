@@ -52,3 +52,7 @@ class Canvas:
         for v in self.vectors:
             new_vectors.append([Point(p.x * x, p.y * x) for p in v])
         self.vectors = new_vectors
+
+    def translate(self, x: float, y: float) -> None:
+        """Translate the canvas"""
+        self.vectors = [[i.translate(x, y) for i in v] for v in self.vectors]
