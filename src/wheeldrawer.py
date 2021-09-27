@@ -27,26 +27,30 @@ class WheelDrawer(metaclass=abc.ABCMeta):
         height = 10
         wheel_rim_thickness = 1
 
+        
+        padding = 1
+
         c = Canvas(size=(width, height))
-        c.add(
-            Annulus(
-                inner_radius=(width / 2) - wheel_rim_thickness,
-                outer_radius=width / 2,
-                origin=Point(width / 2, height / 2),
-            )
-        )
+
         c.add(
             Line(
-                Point(offset, height / 2),
-                Point(width - offset, height / 2),
+                Point(offset+padding, height / 2),
+                Point(width - offset-padding, height / 2),
                 thickness=wheel_rim_thickness,
             )
         )
         c.add(
             Line(
                 Point(width / 2, height / 2),
-                Point(width / 2, height - offset),
+                Point(width / 2, height - offset-padding),
                 thickness=wheel_rim_thickness,
+            )
+        )
+        c.add(
+            Annulus(
+                inner_radius=(width / 2) - padding - wheel_rim_thickness,
+                outer_radius=width / 2 - padding,
+                origin=Point(width / 2, height / 2),
             )
         )
         c.rotate(
@@ -55,4 +59,5 @@ class WheelDrawer(metaclass=abc.ABCMeta):
         )
         c.scale(self.scale)
         vectors = c.generate_vectors()
+
         self.paint(vectors)

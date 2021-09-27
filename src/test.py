@@ -17,6 +17,7 @@ else:
             self.screen = pygame.display.set_mode(size=(600, 600))
 
         def paint(self, vectors: ShapeCollection) -> None:
+            print('drwawing {} vectors'.format(len(vectors)))
             self.screen.fill((0, 0, 0, 0))
             for shape_points in vectors:
                 # print(f"drawing {[(i.x, i.y) for i in shape_points]}")
@@ -45,7 +46,7 @@ def main():
     import time
 
     drawer = TestWheelDrawer()
-    for i in range(-181, 181):
+    for i in range(-361, 361):
         drawer.display(i)
         time.sleep(0.015)
 

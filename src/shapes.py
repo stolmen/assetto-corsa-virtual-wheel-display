@@ -52,7 +52,7 @@ class Shape(metaclass=abc.ABCMeta):
 
 class Annulus(Shape):
     def __init__(self, inner_radius: float, outer_radius: float, origin: Point):
-        num_components = 50
+        num_components = 20
         self.vectors = []
         inner_points = self._points_on_a_circle(
             origin=origin, radius=inner_radius, n=num_components
@@ -69,14 +69,15 @@ class Annulus(Shape):
         for (inner_1, inner_2), (outer_1, outer_2) in zip(
             pair(inner_points), pair(outer_points)
         ):
-            self.vectors.append(
-                [
-                    inner_1,
-                    outer_1,
-                    outer_2,
-                    inner_2,
-                ]
-            )
+            things = [
+                outer_2,
+                outer_1,
+                inner_1,
+                inner_2, 
+            ]
+            self.vectors.append(things)
+
+        self.vectors = self.vectors
 
     def generate_vectors(self) -> ShapeCollection:
         # try:
