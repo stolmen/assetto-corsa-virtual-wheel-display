@@ -1,6 +1,19 @@
-import abc
-import typing
+import sys
+import os
 import math
+sys.path.append(os.path.dirname(__file__))
+
+import abc
+
+try:
+    import typing
+    ShapePoints = typing.Sequence[
+        'Point'
+    ]  # The definition of a shape through a collection of vertices
+    ShapeCollection = typing.Sequence[ShapePoints]  # Collection of shapes
+except ImportError:
+    ShapePoints='asdf'
+    ShapeCollection='asdf'
 
 
 class Point:
@@ -27,14 +40,11 @@ class Point:
     def translate(self, x: float, y: float) -> "Point":
         return Point(x + self.x, y + self.y)
 
-
-ShapePoints = typing.Sequence[
-    Point
-]  # The definition of a shape through a collection of vertices
-ShapeCollection = typing.Sequence[ShapePoints]  # Collection of shapes
+    def __repr__(self):
+        return '<Point ({}, {}))>'.format(self.x, self.y)
 
 
-class Shape(abc.ABC):
+class Shape(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def generate_vectors(self) -> ShapeCollection:
         pass
@@ -59,14 +69,15 @@ class Annulus(Shape):
         for (inner_1, inner_2), (outer_1, outer_2) in zip(
             pair(inner_points), pair(outer_points)
         ):
-            self.vectors.append(
-                [
-                    inner_1,
-                    outer_1,
-                    outer_2,
-                    inner_2,
-                ]
-            )
+            things = [
+                outer_2,
+                outer_1,
+                inner_1,
+                inner_2, 
+            ]
+            self.vectors.append(things)
+
+        self.vectors = self.vectors
 
     def generate_vectors(self) -> ShapeCollection:
         return self.vectors
